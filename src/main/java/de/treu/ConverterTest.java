@@ -15,7 +15,11 @@ public class ConverterTest {
 		FileInputStream is = null;
 		try {
 			is = new FileInputStream(vcardFile);
-			byte[] png = new VCard2ImageConverter().convertVCard(is, ExportType.PNG, 900, 450);
+			
+			VCard2ImageConverter converter = new VCard2ImageConverter();
+//			configureConverter(converter);
+			byte[] png = converter.convertVCard(is, ExportType.PNG, 900, 450);
+			
 			out = new FileOutputStream("/Users/treu/Desktop/vfc.png");
 			out.write(png);
 			out.flush();
@@ -31,4 +35,14 @@ public class ConverterTest {
 			}
 		}
 	}
+	
+	private static void configureConverter(VCard2ImageConverter converter) {
+		converter.setNamePrefix("Name:");
+		converter.setAddressPrefix("Adresse:");
+		converter.setEmailPrefix("E-Mail:");
+		converter.setPhonePrefix("Tel.:");
+		converter.setMessengerPrefix("Messenger:");
+		converter.setOrganisationPrefix("Organisation:");
+	}
+
 }

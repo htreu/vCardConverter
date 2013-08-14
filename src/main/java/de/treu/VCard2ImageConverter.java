@@ -25,15 +25,28 @@ import net.sourceforge.cardme.vcard.types.TelType;
 
 public class VCard2ImageConverter {
 	
+	// private fields *********************************************************
+	
+	private String namePrefix;
+	private String phonePrefix;
+	private String emailPrefix;
+	private String addressPrefix;
+	private String messengerPrefix;
+	private String organisationPrefix;
+	
+	
+	// public API *************************************************************
+	
 	/**
-	 * Converts a vCard byte[] to an image of type {@link ExportType} with the given width and 
-	 * height. Black font on white background.
+	 * Converts a vCard byte[] to an image of type {@link ExportType} with the 
+	 * given width and height. Black font on white background.
 	 * 
 	 * @param vcard the byte[] representing the vCard.
 	 * @param type the {@link ExportType} (PNG or JPG).
 	 * @param width the width of the resulting image.
 	 * @param height the height of the resulting image.
-	 * @return a byte[] with the vCard information, encoded in a {@link ExportType} format.
+	 * @return a byte[] with the vCard information, encoded in a 
+	 * 			{@link ExportType} format.
 	 * @throws IOException
 	 */
 	public byte[] convertVCard(byte[] vcard, ExportType type, int width, int height) 
@@ -43,27 +56,55 @@ public class VCard2ImageConverter {
 	}
 	
 	/**
-	 * Converts a vCard byte[] to an image of type {@link ExportType} with the given width and 
-	 * height. Black font on white background.
+	 * Converts a vCard byte[] to an image of type {@link ExportType} with the 
+	 * given width and height. Black font on white background.
 	 * 
 	 * @param is the {@link InputStream} representing the vCard.
 	 * @param type the {@link ExportType} (PNG or JPG).
 	 * @param width the width of the resulting image.
 	 * @param height the height of the resulting image.
-	 * @return a byte[] with the vCard information, encoded in a {@link ExportType} format.
+	 * @return a byte[] with the vCard information, encoded in a 
+	 * 			{@link ExportType} format.
 	 * @throws IOException
 	 */
-	public byte[] convertVCard(InputStream is, ExportType type, int width, int height) 
-			throws IOException 
+	public byte[] convertVCard(InputStream is, ExportType type, int width,
+			int height)	throws IOException 
 	{
 		VCard card = getVCard(is);
 		List<String> lines = getVCardText(card);
 		byte[] photo = getVCardPhoto(card);
 		return renderToImage(lines, photo, type, width, height);
 	}
+	
+	public void setNamePrefix(String namePrefix) {
+		this.namePrefix = namePrefix;
+	}
 
-	private byte[] renderToImage(List<String> lines, byte[] photo, ExportType type, int width, 
-			int height) throws IOException
+	public void setPhonePrefix(String phonePrefix) {
+		this.phonePrefix = phonePrefix;
+	}
+
+	public void setEmailPrefix(String emailPrefix) {
+		this.emailPrefix = emailPrefix;
+	}
+
+	public void setAddressPrefix(String addressPrefix) {
+		this.addressPrefix = addressPrefix;
+	}
+
+	public void setMessengerPrefix(String messengerPrefix) {
+		this.messengerPrefix = messengerPrefix;
+	}
+
+	public void setOrganisationPrefix(String organisationPrefix) {
+		this.organisationPrefix = organisationPrefix;
+	}
+
+	
+	// private helper *********************************************************
+	
+	private byte[] renderToImage(List<String> lines, byte[] photo, 
+			ExportType type, int width, int height) throws IOException
 	{
 		BufferedImage image = new BufferedImage(width, height,
 				BufferedImage.TYPE_3BYTE_BGR);
@@ -101,9 +142,11 @@ public class VCard2ImageConverter {
 		try {
 			return engine.parse(is);
 		} catch (IOException e) {
-			throw new IllegalStateException("Error parsing or accessing the vcf card." , e);
+			throw new IllegalStateException(
+					"Error parsing or accessing the vcf card." , e);
 		} catch (VCardParseException e) {
-			throw new IllegalStateException("Error parsing or accessing the vcf card." , e);
+			throw new IllegalStateException(
+					"Error parsing or accessing the vcf card." , e);
 		}
 	}
 
@@ -123,20 +166,20 @@ public class VCard2ImageConverter {
 		// card.getLables()) System.out.println("labels: " + t.toString());
 		// if (card.getLogos() != null) for (LogoType t : card.getLogos())
 		// System.out.println("logo: " + t.toString());
-		lines.add("Name: " + getName(card));
-		lines.add("Address: " + getAddress(card));
+		lines.add(prefix(namePrefix) + getName(card));
+		lines.add(prefix(addressPrefix) + getAddress(card));
 		if (card.getOrg() != null)
-			lines.add("Organisation: " + card.getOrg().getOrgName());
+			lines.add(prefix(organisationPrefix) + card.getOrg().getOrgName());
 
 		if (card.getTels() != null)
 			for (TelType t : card.getTels())
-				lines.add("Tel: " + t.getTelephone());
+				lines.add(prefix(phonePrefix) + t.getTelephone());
 		if (card.getEmails() != null)
 			for (EmailType t : card.getEmails())
-				lines.add("E-Mail: " + t.getEmail());
+				lines.add(prefix(emailPrefix) + t.getEmail());
 		if (card.getIMPPs() != null)
 			for (ImppType t : card.getIMPPs())
-				lines.add("Messenger: " + t.getUri());
+				lines.add(prefix(messengerPrefix) + t.getUri());
 		
 		return lines;
 	}
@@ -151,7 +194,9 @@ public class VCard2ImageConverter {
 	}
 
 	/**
-	 * Returns one of the names from the VCard. The priority is "FN", "N", "Name", "Nicknames".
+	 * Returns one of the names from the VCard. The priority is "FN", "N", 
+	 * "Name", "Nicknames".
+	 * 
 	 * @param card the vCard object.
 	 * @return the name in the vCard
 	 */
@@ -200,7 +245,21 @@ public class VCard2ImageConverter {
 		}
 		return sb.toString();
 	}
+	
+	private String prefix(String prefix) {
+		if (prefix == null || prefix.length() == 0) {
+			return "";
+		}
+		
+		if (prefix.endsWith(" ")) {
+			return prefix;
+		}
+		
+		return prefix + " ";
+	}
 
+	
+	// Public helper classes **************************************************
 	
 	/**
 	 * Export type for the resulting image. Options are JPG and PNG.
