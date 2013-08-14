@@ -23,18 +23,37 @@ import net.sourceforge.cardme.vcard.types.TelType;
 public class VCard2ImageConverter {
 	
 	/**
+	 * Converts a vCard byte[] to an image of type {@link ExportType} with the given width and 
+	 * height. Black font on white background.
 	 * 
-	 * @param vcard
-	 * @param type
-	 * @param width
-	 * @param height
-	 * @return
+	 * @param vcard the byte[] representing the vCard.
+	 * @param type the {@link ExportType} (PNG or JPG).
+	 * @param width the width of the resulting image.
+	 * @param height the height of the resulting image.
+	 * @return a byte[] with the vCard information, encoded in a {@link ExportType} format.
 	 * @throws IOException
 	 */
 	public byte[] convertVCard(byte[] vcard, ExportType type, int width, int height) 
 			throws IOException 
 	{
-		List<String> lines = createVCardText(new ByteArrayInputStream(vcard));
+		return convertVCard(new ByteArrayInputStream(vcard), type, width, height);
+	}
+	
+	/**
+	 * Converts a vCard byte[] to an image of type {@link ExportType} with the given width and 
+	 * height. Black font on white background.
+	 * 
+	 * @param is the {@link InputStream} representing the vCard.
+	 * @param type the {@link ExportType} (PNG or JPG).
+	 * @param width the width of the resulting image.
+	 * @param height the height of the resulting image.
+	 * @return a byte[] with the vCard information, encoded in a {@link ExportType} format.
+	 * @throws IOException
+	 */
+	public byte[] convertVCard(InputStream is, ExportType type, int width, int height) 
+			throws IOException 
+	{
+		List<String> lines = createVCardText(is);
 		return renderLinesToImage(lines, type, width, height);
 	}
 
