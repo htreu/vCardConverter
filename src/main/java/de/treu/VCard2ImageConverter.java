@@ -5,6 +5,7 @@ import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.awt.image.RescaleOp;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -15,9 +16,11 @@ import java.util.List;
 import javax.imageio.ImageIO;
 
 import net.sourceforge.cardme.vcard.VCard;
+import net.sourceforge.cardme.vcard.exceptions.VCardParseException;
 import net.sourceforge.cardme.vcard.types.AdrType;
 import net.sourceforge.cardme.vcard.types.EmailType;
 import net.sourceforge.cardme.vcard.types.ImppType;
+import net.sourceforge.cardme.vcard.types.PhotoType;
 import net.sourceforge.cardme.vcard.types.TelType;
 
 public class VCard2ImageConverter {
@@ -53,12 +56,14 @@ public class VCard2ImageConverter {
 	public byte[] convertVCard(InputStream is, ExportType type, int width, int height) 
 			throws IOException 
 	{
-		List<String> lines = createVCardText(is);
-		return renderLinesToImage(lines, type, width, height);
+		VCard card = getVCard(is);
+		List<String> lines = getVCardText(card);
+		byte[] photo = getVCardPhoto(card);
+		return renderToImage(lines, photo, type, width, height);
 	}
 
-	private byte[] renderLinesToImage(List<String> lines, ExportType type, int width, int height)
-			throws IOException
+	private byte[] renderToImage(List<String> lines, byte[] photo, ExportType type, int width, 
+			int height) throws IOException
 	{
 		BufferedImage image = new BufferedImage(width, height,
 				BufferedImage.TYPE_3BYTE_BGR);
@@ -77,6 +82,12 @@ public class VCard2ImageConverter {
 			g.drawString(line, 50, (50 + offset));
 			offset += 40;
 		}
+		
+		if (photo != null) {
+			BufferedImage i = ImageIO.read(new ByteArrayInputStream(photo));
+			g.drawImage(i, new RescaleOp(1f, 1f, null), 650, 20);
+		}
+		
 		g.dispose();
 
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -84,45 +95,59 @@ public class VCard2ImageConverter {
 
 		return out.toByteArray();
 	}
-
-	private List<String> createVCardText(InputStream is) {
+	
+	private VCard getVCard(InputStream is) {
 		ExtendedVCardEngine engine = new ExtendedVCardEngine();
-		List<String> lines = new ArrayList<String>();
 		try {
-			VCard card = engine.parse(is);
-			// if (card.getAgents() != null) for (AgentType t :
-			// card.getAgents()) System.out.println("agent: " + t.toString());
-			// if (card.getCategories() != null)
-			// System.out.println("categories: " +
-			// card.getCategories().toString());
-			// if (card.getExtendedTypes() != null) for (ExtendedType t :
-			// card.getExtendedTypes()) System.out.println("extended: " +
-			// t.toString());
-			// if (card.getKeys() != null) for (KeyType t : card.getKeys())
-			// System.out.println("keys: " + t.toString());
-			// if (card.getLables() != null) for (LabelType t :
-			// card.getLables()) System.out.println("labels: " + t.toString());
-			// if (card.getLogos() != null) for (LogoType t : card.getLogos())
-			// System.out.println("logo: " + t.toString());
-			lines.add("Name: " + getName(card));
-			lines.add("Address: " + getAddress(card));
-			if (card.getOrg() != null)
-				lines.add("Organisation: " + card.getOrg().getOrgName());
-
-			if (card.getTels() != null)
-				for (TelType t : card.getTels())
-					lines.add("Tel: " + t.getTelephone());
-			if (card.getEmails() != null)
-				for (EmailType t : card.getEmails())
-					lines.add("Email: " + t.getEmail());
-			if (card.getIMPPs() != null)
-				for (ImppType t : card.getIMPPs())
-					lines.add("Messanger: " + t.getUri());
-		} catch (Exception e) {
+			return engine.parse(is);
+		} catch (IOException e) {
+			throw new IllegalStateException("Error parsing or accessing the vcf card." , e);
+		} catch (VCardParseException e) {
 			throw new IllegalStateException("Error parsing or accessing the vcf card." , e);
 		}
+	}
 
+	private List<String> getVCardText(VCard card) {
+		List<String> lines = new ArrayList<String>();
+		// if (card.getAgents() != null) for (AgentType t :
+		// card.getAgents()) System.out.println("agent: " + t.toString());
+		// if (card.getCategories() != null)
+		// System.out.println("categories: " +
+		// card.getCategories().toString());
+		// if (card.getExtendedTypes() != null) for (ExtendedType t :
+		// card.getExtendedTypes()) System.out.println("extended: " +
+		// t.toString());
+		// if (card.getKeys() != null) for (KeyType t : card.getKeys())
+		// System.out.println("keys: " + t.toString());
+		// if (card.getLables() != null) for (LabelType t :
+		// card.getLables()) System.out.println("labels: " + t.toString());
+		// if (card.getLogos() != null) for (LogoType t : card.getLogos())
+		// System.out.println("logo: " + t.toString());
+		lines.add("Name: " + getName(card));
+		lines.add("Address: " + getAddress(card));
+		if (card.getOrg() != null)
+			lines.add("Organisation: " + card.getOrg().getOrgName());
+
+		if (card.getTels() != null)
+			for (TelType t : card.getTels())
+				lines.add("Tel: " + t.getTelephone());
+		if (card.getEmails() != null)
+			for (EmailType t : card.getEmails())
+				lines.add("E-Mail: " + t.getEmail());
+		if (card.getIMPPs() != null)
+			for (ImppType t : card.getIMPPs())
+				lines.add("Messenger: " + t.getUri());
+		
 		return lines;
+	}
+	
+	private byte[] getVCardPhoto(VCard card) {
+		if (card.getPhotos() != null)
+			for (PhotoType t : card.getPhotos()) {
+				return t.getBinaryData();
+			}
+		
+		return null;
 	}
 
 	/**

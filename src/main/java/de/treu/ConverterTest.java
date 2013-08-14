@@ -10,7 +10,7 @@ import de.treu.VCard2ImageConverter.ExportType;
 public class ConverterTest {
 
 	public static void main(String[] args) {
-		File vcardFile = new File("/Users/treu/Desktop/htreu.vcf");
+		File vcardFile = new File("/Users/treu/Desktop/htreu1.vcf");
 		FileOutputStream out = null;
 		FileInputStream is = null;
 		try {
