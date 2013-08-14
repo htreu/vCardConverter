@@ -1,11 +1,12 @@
 apply plugin: 'java'
 apply plugin: 'eclipse'
+apply plugin: 'maven'
 
 sourceCompatibility = 1.5
 version = '1.0'
 jar {
     manifest {
-        attributes 'Implementation-Title': 'Gradle Quickstart', 'Implementation-Version': version
+        attributes 'Implementation-Version': version
     }
 }
 
@@ -14,14 +15,9 @@ repositories {
 }
 
 dependencies {
-    compile group: 'commons-collections', name: 'commons-collections', version: '3.2'
     compile 'net.sourceforge.cardme:cardme:0.4.0'
     compile 'commons-codec:commons-codec:1.5'
     testCompile group: 'junit', name: 'junit', version: '4.+'
-}
-
-test {
-    systemProperties 'property': 'value'
 }
 
 uploadArchives {
@@ -30,4 +26,8 @@ uploadArchives {
            dirs 'repos'
        }
     }
+}
+
+task writeNewPom << {
+    pom {}.writeTo("$rootDir/pom.xml")
 }
