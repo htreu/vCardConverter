@@ -17,7 +17,7 @@ public class ConverterTest {
 			is = new FileInputStream(vcardFile);
 			
 			VCard2ImageConverter converter = new VCard2ImageConverter();
-//			configureConverter(converter);
+			configureConverter(converter);
 			byte[] png = converter.convertVCard(is, ExportType.PNG, 900, 450);
 			
 			out = new FileOutputStream("/Users/treu/Desktop/vfc.png");
